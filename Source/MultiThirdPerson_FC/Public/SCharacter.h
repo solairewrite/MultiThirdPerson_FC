@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class ASWeapon;
 
 UCLASS()
 class MULTITHIRDPERSON_FC_API ASCharacter : public ACharacter
@@ -33,6 +34,33 @@ protected:
 
 	void BeginCrouch();
 	void EndCrouch();
+
+	UPROPERTY(BlueprintReadWrite, Category = "Components")
+		ASWeapon* CuttentWeapon;
+
+	virtual FVector GetPawnViewLocation() const override;
+
+	bool bWantsToZoom;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+		float ZoomedFOV;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 0.1, ClampMax = 100.0))
+		float ZoomInterpSpeed;
+
+	float DefaultFOV;
+
+	void BeginZoom();
+	void EndZoom();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player", meta = (ClampMin = 1.0, ClampMax = 2.0))
+		float SpeedUpRate;
+
+	float DefaultWalkSpeed;
+	float DefaultCrouchWalkSpeed;
+
+	void BeginSpeedUp();
+	void EndSpeedUp();
 
 public:
 	// Called every frame
