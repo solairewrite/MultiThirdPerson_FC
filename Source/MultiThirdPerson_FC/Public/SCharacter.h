@@ -9,6 +9,8 @@
 class UCameraComponent;
 class USpringArmComponent;
 class ASWeapon;
+class USHealthComponent;
+
 
 UCLASS()
 class MULTITHIRDPERSON_FC_API ASCharacter : public ACharacter
@@ -35,9 +37,6 @@ protected:
 	void BeginCrouch();
 	void EndCrouch();
 
-	UPROPERTY(BlueprintReadWrite, Category = "Components")
-		ASWeapon* CuttentWeapon;
-
 	virtual FVector GetPawnViewLocation() const override;
 
 	bool bWantsToZoom;
@@ -61,6 +60,35 @@ protected:
 
 	void BeginSpeedUp();
 	void EndSpeedUp();
+
+
+	UPROPERTY(BlueprintReadWrite, Category = "Components")
+		ASWeapon* CurrentWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+		TSubclassOf<ASWeapon> FirstWeaponClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+		TSubclassOf<ASWeapon> SecondWeaponClass;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Player")
+		FName WeaponAttackSocketName;
+
+	void EquipWeapon(TSubclassOf<ASWeapon> WeaponClass);
+	void EquipFirstWeapon();
+	void EquipSecondWeapon();
+
+	void StartFire();
+	void StopFire();
+
+	USHealthComponent* HealthComp;
+
+	UFUNCTION()
+		void OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	// 动画蓝图中控制死亡的变量
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+		bool bDied;
 
 public:
 	// Called every frame

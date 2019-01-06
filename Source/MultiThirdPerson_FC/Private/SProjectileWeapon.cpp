@@ -1,9 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SProjectileWeapon.h"
-
-
-
+#include "Public/SProjectileWeapon.h"
+#include "Components/SkeletalMeshComponent.h"
 
 void ASProjectileWeapon::Fire()
 {

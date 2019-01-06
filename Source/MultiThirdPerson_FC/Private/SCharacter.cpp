@@ -1,11 +1,25 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "SCharacter.h"
+#include "Public/SCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Public/SWeapon.h"
+#include "Engine/World.h"
+#include "Components/InputComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "MultiThirdPerson_FC.h"
+#include "SHealthComponent.h"
+
+static int32 DebugLogLevel = 0;
+FAutoConsoleVariableRef CVARDebugLogLevel(
+	TEXT("DebugLogLevel"),
+	DebugLogLevel,
+	TEXT("是否可以输出,默认0,大于0可以输出"),
+	ECVF_Cheat
+);
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -26,6 +40,16 @@ ASCharacter::ASCharacter()
 	ZoomInterpSpeed = 20;
 
 	SpeedUpRate = 1.2;
+
+	WeaponAttackSocketName = "WeaponSocket";
+
+	// 禁止子弹打到胶囊体,只允许打到Mesh
+	// 可以观察PlayerPawn -. CapsuleComponent -> Collision Presets -> Weapon: Block
+	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
+
+	// 添加血量组件
+	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
+	bDied = false;
 }
 
 // Called when the game starts or when spawned
@@ -36,6 +60,12 @@ void ASCharacter::BeginPlay()
 	DefaultFOV = CameraComp->FieldOfView;
 	DefaultWalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
 	DefaultCrouchWalkSpeed = GetCharacterMovement()->MaxWalkSpeedCrouched;
+
+	// 生成武器
+	EquipFirstWeapon();
+
+	// 绑定掉血方法
+	HealthComp->OnHealthChanged.AddDynamic(this, &ASCharacter::OnHealthChanged);
 }
 
 void ASCharacter::MoveForward(float value)
@@ -89,6 +119,78 @@ void ASCharacter::EndSpeedUp()
 	GetCharacterMovement()->MaxWalkSpeedCrouched = DefaultCrouchWalkSpeed;
 }
 
+void ASCharacter::EquipWeapon(TSubclassOf<ASWeapon> WeaponClass)
+{
+	// TODO 播放Equip动画,在学习死亡动画的时候添加
+	if (!WeaponClass || CurrentWeapon->StaticClass == WeaponClass->StaticClass)
+	{
+
+		if (DebugLogLevel > 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("未设置武器或无需切换武器  %s"), *(WeaponClass->GetFName().ToString()));
+		}
+		return;
+	}
+
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->Destroy();
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetOwner(this); // 对应SWeapon::Fire()的GetOwner
+		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponAttackSocketName);
+	}
+}
+
+void ASCharacter::EquipFirstWeapon()
+{
+	EquipWeapon(FirstWeaponClass);
+}
+
+void ASCharacter::EquipSecondWeapon()
+{
+	EquipWeapon(SecondWeaponClass);
+}
+
+void ASCharacter::StartFire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StartFire();
+	}
+}
+
+void ASCharacter::StopFire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StopFire();
+	}
+}
+
+void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (Health < 0.0f && !bDied) // 死亡
+	{
+		// 控制播放死亡动画,在蓝图中通过bDied设置
+		bDied = true;
+		// 立刻停止移动
+		GetMovementComponent()->StopMovementImmediately();
+		// 禁用胶囊体,禁用碰撞
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// 使Pawn与控制器分离,等待销毁
+		DetachFromControllerPendingDestroy();
+		// 定时销毁
+		SetLifeSpan(7.0f);
+	}
+}
+
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
@@ -103,6 +205,7 @@ void ASCharacter::Tick(float DeltaTime)
 // Called to bind functionality to input
 void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
+
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ASCharacter::MoveForward);
@@ -121,5 +224,11 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 	PlayerInputComponent->BindAction("SpeedUp", IE_Pressed, this, &ASCharacter::BeginSpeedUp);
 	PlayerInputComponent->BindAction("SpeedUp", IE_Released, this, &ASCharacter::EndSpeedUp);
+
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ASCharacter::StartFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ASCharacter::StopFire);
+
+	PlayerInputComponent->BindAction("FirstWeapon", IE_Pressed, this, &ASCharacter::EquipFirstWeapon);
+	PlayerInputComponent->BindAction("SecondWeapon", IE_Pressed, this, &ASCharacter::EquipSecondWeapon);
 }
 
