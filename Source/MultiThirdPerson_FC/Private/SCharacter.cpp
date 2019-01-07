@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "MultiThirdPerson_FC.h"
 #include "SHealthComponent.h"
+#include "Net/UnrealNetwork.h"
 
 static int32 DebugLogLevel = 0;
 FAutoConsoleVariableRef CVARDebugLogLevel(
@@ -50,6 +51,8 @@ ASCharacter::ASCharacter()
 	// 添加血量组件
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 	bDied = false;
+	bPressedEquip = false;
+	EquipAnimLength = 1.5f;
 }
 
 // Called when the game starts or when spawned
@@ -137,6 +140,11 @@ void ASCharacter::EquipWeapon(TSubclassOf<ASWeapon> WeaponClass)
 		CurrentWeapon->Destroy();
 	}
 
+	bPressedEquip = true;
+	FTimerHandle TimerHandle_StopEquipAnim;
+	GetWorldTimerManager().SetTimer(TimerHandle_StopEquipAnim, this, &ASCharacter::StopEquipAnim, EquipAnimLength
+		, false);
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	CurrentWeapon = GetWorld()->SpawnActor<ASWeapon>(WeaponClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
@@ -176,10 +184,12 @@ void ASCharacter::StopFire()
 
 void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Health < 0.0f && !bDied) // 死亡
+	if (Health <= 0.0f && !bDied) // 死亡
 	{
 		// 控制播放死亡动画,在蓝图中通过bDied设置
 		bDied = true;
+		// 停止开火
+		StopFire();
 		// 立刻停止移动
 		GetMovementComponent()->StopMovementImmediately();
 		// 禁用胶囊体,禁用碰撞
@@ -189,6 +199,11 @@ void ASCharacter::OnHealthChanged(USHealthComponent* HealthComp, float Health, f
 		// 定时销毁
 		SetLifeSpan(7.0f);
 	}
+}
+
+void ASCharacter::StopEquipAnim()
+{
+	bPressedEquip = false;
 }
 
 // Called every frame
@@ -232,3 +247,9 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAction("SecondWeapon", IE_Pressed, this, &ASCharacter::EquipSecondWeapon);
 }
 
+void ASCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASCharacter, CurrentWeapon);
+}

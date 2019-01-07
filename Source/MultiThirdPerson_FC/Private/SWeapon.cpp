@@ -35,6 +35,8 @@ ASWeapon::ASWeapon()
 	BaseDamage = 20.0f;
 
 	RateOfFire = 300;
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -47,6 +49,13 @@ void ASWeapon::BeginPlay()
 
 void ASWeapon::Fire()
 {
+	// 如果不是服务器,发送请求到服务器,执行这段代码
+	if (Role < ROLE_Authority)
+	{
+		ServerFire();
+	}
+
+
 	// 记录上一次开火的时间,时间冷却内无法射击
 	LastFireTime = GetWorld()->TimeSeconds;
 
@@ -85,6 +94,17 @@ void ASWeapon::Fire()
 			PlayFireEffects(Hit, EyeLocation);
 		}
 	}
+}
+
+// 实现服务器方法,在后面加上 _Implementation
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+// 服务器方法,一般return true即可
+bool ASWeapon::ServerFire_Validate()
+{
+	return true;
 }
 
 void ASWeapon::StartFire()

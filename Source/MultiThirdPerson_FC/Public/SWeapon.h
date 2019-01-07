@@ -62,6 +62,10 @@ protected:
 		float RateOfFire;
 	float TimeBetweenShots;
 
+	// Server: 不在客户端执行方法,而是请求服务器
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerFire();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

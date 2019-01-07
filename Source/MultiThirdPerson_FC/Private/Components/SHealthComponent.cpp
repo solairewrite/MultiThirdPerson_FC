@@ -35,8 +35,8 @@ void USHealthComponent::HandleTakeAnyDanage(AActor* DamagedActor, float Damage, 
 		return;
 	}
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
-
-	UE_LOG(LogTemp, Warning, TEXT("血量改变: %s"), *FString::SanitizeFloat(Health));
+	FString OwnerName = GetOwner()->GetFName().ToString();
+	UE_LOG(LogTemp, Warning, TEXT("血量改变: %s %s"), *OwnerName, *FString::SanitizeFloat(Health));
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 }

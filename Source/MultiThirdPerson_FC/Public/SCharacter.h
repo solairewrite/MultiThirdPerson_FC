@@ -62,7 +62,7 @@ protected:
 	void EndSpeedUp();
 
 
-	UPROPERTY(BlueprintReadWrite, Category = "Components")
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = "Components")
 		ASWeapon* CurrentWeapon;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
@@ -89,6 +89,15 @@ protected:
 	// 动画蓝图中控制死亡的变量
 	UPROPERTY(BlueprintReadOnly, Category = "Player")
 		bool bDied;
+
+	// 控制换枪动画
+	UPROPERTY(BlueprintReadOnly, Category = "Player")
+		bool bPressedEquip;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+		float EquipAnimLength;
+
+	void StopEquipAnim();
 
 public:
 	// Called every frame
