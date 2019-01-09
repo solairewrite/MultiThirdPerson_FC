@@ -81,17 +81,19 @@ protected:
 	void StartFire();
 	void StopFire();
 
-	USHealthComponent* HealthComp;
+	// VisibleAnywhere:可以在属性窗口查看
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+		USHealthComponent* HealthComp;
 
 	UFUNCTION()
-		void OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+		void OnHealthChanged(USHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 	// 动画蓝图中控制死亡的变量
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 		bool bDied;
 
 	// 控制换枪动画
-	UPROPERTY(BlueprintReadOnly, Category = "Player")
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 		bool bPressedEquip;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")

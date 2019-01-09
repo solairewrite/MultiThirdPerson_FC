@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Public/Components/SHealthComponent.h"
-
+#include "Net/UnrealNetwork.h"
 
 // Sets default values for this component's properties
 USHealthComponent::USHealthComponent()
@@ -9,6 +9,8 @@ USHealthComponent::USHealthComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	DefaultHealth = 100.0;
+
+	SetIsReplicated(true);
 }
 
 
@@ -17,14 +19,15 @@ void USHealthComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Health = DefaultHealth;
-
-	AActor* MyOwner = GetOwner();
-	if (MyOwner)
+	if (GetOwnerRole() == ROLE_Authority)
 	{
-		MyOwner->OnTakeAnyDamage.AddDynamic(this, &USHealthComponent::HandleTakeAnyDanage);
+		AActor* MyOwner = GetOwner();
+		if (MyOwner)
+		{
+			MyOwner->OnTakeAnyDamage.AddDynamic(this, &USHealthComponent::HandleTakeAnyDanage);
+		}
 	}
-
+	Health = DefaultHealth;
 }
 
 
@@ -49,3 +52,9 @@ void USHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	// ...
 }
 
+void USHealthComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(USHealthComponent, Health);
+}

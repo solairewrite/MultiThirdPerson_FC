@@ -8,6 +8,22 @@
 
 class USkeletalMeshComponent;
 class UParticleSystem;
+class UPhysicalMaterial;
+
+USTRUCT()
+struct FHitScanTrace
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+		FVector_NetQuantize TraceFrom; // 简化数据
+	UPROPERTY()
+		FVector_NetQuantize TraceTo;
+	UPROPERTY()
+		FRotator HitPointRotation;
+	UPROPERTY()
+		UPhysicalMaterial* HitPhysMaterial;
+};
 
 UCLASS()
 class MULTITHIRDPERSON_FC_API ASWeapon : public AActor
@@ -45,9 +61,9 @@ protected:
 		UParticleSystem* FleshImpactEffect;
 
 	// 根据物理皮肤,播放中枪效果
-	void PlayImpactEffect(FHitResult Hit);
+	void PlayImpactEffect(FHitScanTrace Hit);
 
-	void PlayFireEffects(FHitResult Hit, FVector EyeLocation);
+	void PlayFireEffects(FVector HitPoint);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 		TSubclassOf<UCameraShake> FireCamShake;
@@ -62,16 +78,22 @@ protected:
 		float RateOfFire;
 	float TimeBetweenShots;
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+		virtual void Fire();
+
 	// Server: 不在客户端执行方法,而是请求服务器
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerFire();
 
+	// 每次复制,执行OnRep_HitScanTrace
+	UPROPERTY(ReplicatedUsing = OnRep_HitScanTrace)
+		FHitScanTrace HitScanTrace;
+	UFUNCTION()
+		void OnRep_HitScanTrace();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-		virtual void Fire();
 
 	void StartFire();
 	void StopFire();

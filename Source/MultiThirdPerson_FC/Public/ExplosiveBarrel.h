@@ -35,7 +35,10 @@ protected:
 	UFUNCTION()
 		void OnHealthChanged(USHealthComponent* OwningHealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
-	bool bExploded;
+	UPROPERTY(ReplicatedUsing = OnRep_Exploded)
+		bool bExploded;
+	UFUNCTION()
+		void OnRep_Exploded();
 
 	// 爆炸时,向上的推力
 	UPROPERTY(EditDefaultsOnly, Category = "FX")

@@ -5,7 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AExplosiveBarrel::AExplosiveBarrel()
@@ -33,6 +33,9 @@ AExplosiveBarrel::AExplosiveBarrel()
 	InnerRadius = 200.0f;
 	OuterRadius = 500.0f;
 	DamageFalloff = 5.0f;
+
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 // Called when the game starts or when spawned
@@ -51,17 +54,29 @@ void AExplosiveBarrel::OnHealthChanged(USHealthComponent* OwningHealthComp, floa
 	if (Health <= 0.0f)
 	{
 		bExploded = true;
+		OnRep_Exploded();
 		// 向上炸起
 		FVector BoostIntensity = FVector::UpVector * ExplosionImpulse;
 		MeshComp->AddImpulse(BoostIntensity, NAME_None, true); // 忽略质量
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
-		MeshComp->SetMaterial(0, ExplodedMaterial);
 		RadialForceComp->FireImpulse(); // 冲击波
-
-		// 伤害
-		float MinDamage = 10.0f;
-		TArray<AActor*> IgnoreActors;
-		IgnoreActors.Add(this);
-		UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), RadialDamage, MinDamage, GetActorLocation(), InnerRadius, OuterRadius, DamageFalloff, nullptr, IgnoreActors);
 	}
+}
+
+void AExplosiveBarrel::OnRep_Exploded()
+{
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+	MeshComp->SetMaterial(0, ExplodedMaterial);
+
+	// 伤害
+	float MinDamage = 10.0f;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(this);
+	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), RadialDamage, MinDamage, GetActorLocation(), InnerRadius, OuterRadius, DamageFalloff, nullptr, IgnoreActors);
+}
+
+void AExplosiveBarrel::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AExplosiveBarrel, bExploded);
 }

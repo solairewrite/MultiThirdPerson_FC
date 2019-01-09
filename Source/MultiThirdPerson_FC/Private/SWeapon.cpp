@@ -9,6 +9,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "MultiThirdPerson_FC.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 // 自定义控制台命令
 static int32 DebugWeaponDrawing = 0;
@@ -37,6 +38,10 @@ ASWeapon::ASWeapon()
 	RateOfFire = 300;
 
 	SetReplicates(true);
+
+	// 客户端同步更新频率
+	NetUpdateFrequency = 66.0f;
+	MinNetUpdateFrequency = 33.0f;
 }
 
 // Called when the game starts or when spawned
@@ -54,10 +59,6 @@ void ASWeapon::Fire()
 	{
 		ServerFire();
 	}
-
-
-	// 记录上一次开火的时间,时间冷却内无法射击
-	LastFireTime = GetWorld()->TimeSeconds;
 
 	AActor* MyOwner = GetOwner();
 	if (MyOwner)
@@ -91,9 +92,25 @@ void ASWeapon::Fire()
 			AActor* HitActor = Hit.GetActor();
 			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, EyeLocation, Hit, MyOwner->GetInstigatorController(), this, DamageType);
 
-			PlayFireEffects(Hit, EyeLocation);
+			// 中枪位置效果
+			PlayFireEffects(Hit.ImpactPoint);
+			if (Role == ROLE_Authority)
+			{
+				HitScanTrace.TraceFrom = EyeLocation;
+				HitScanTrace.TraceTo = Hit.ImpactPoint;
+				HitScanTrace.HitPhysMaterial = Hit.PhysMaterial.Get();
+				HitScanTrace.HitPointRotation = Hit.ImpactNormal.Rotation();
+			}
+
+			// 记录上一次开火的时间,时间冷却内无法射击
+			LastFireTime = GetWorld()->TimeSeconds;
 		}
 	}
+}
+
+void ASWeapon::OnRep_HitScanTrace()
+{
+	PlayFireEffects(HitScanTrace.TraceTo);
 }
 
 // 实现服务器方法,在后面加上 _Implementation
@@ -120,9 +137,8 @@ void ASWeapon::StopFire()
 	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }
 
-void ASWeapon::PlayFireEffects(FHitResult Hit, FVector EyeLocation)
+void ASWeapon::PlayFireEffects(FVector HitPoint)
 {
-	FVector HitPointLocation = Hit.ImpactPoint;
 
 	// 镜头抖动
 	APawn* MyOwner = Cast<APawn>(GetOwner());
@@ -134,14 +150,10 @@ void ASWeapon::PlayFireEffects(FHitResult Hit, FVector EyeLocation)
 			PC->ClientPlayCameraShake(FireCamShake);
 		}
 	}
-	// 中枪位置效果
-	PlayImpactEffect(Hit);
 
-	// 子弹轨迹射线
-	if (DebugWeaponDrawing > 0)
-	{
-		DrawDebugLine(GetWorld(), EyeLocation, HitPointLocation, FColor::Red, false, 1.0f, 0, 1.0f);
-	}
+	// 被击中点的特效
+	PlayImpactEffect(HitScanTrace);
+
 	// 枪口特效
 	if (MuzzleEffect)
 	{
@@ -151,6 +163,13 @@ void ASWeapon::PlayFireEffects(FHitResult Hit, FVector EyeLocation)
 			UE_LOG(LogTemp, Warning, TEXT("播放枪口特效"))
 		}
 	}
+
+	// 子弹轨迹射线
+	if (DebugWeaponDrawing > 0)
+	{
+		DrawDebugLine(GetWorld(), HitScanTrace.TraceFrom, HitPoint, FColor::Red, false, 1.0f, 0, 1.0f);
+	}
+
 	// 子弹轨迹射线
 	if (TracerEffect)
 	{
@@ -158,15 +177,14 @@ void ASWeapon::PlayFireEffects(FHitResult Hit, FVector EyeLocation)
 		UParticleSystemComponent* TracerComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), TracerEffect, MuzzleLocation);
 		if (TracerComp)
 		{
-			TracerComp->SetVectorParameter(TracerTargetName, HitPointLocation);
+			TracerComp->SetVectorParameter(TracerTargetName, HitPoint);
 		}
 	}
 }
 
-
-void ASWeapon::PlayImpactEffect(FHitResult Hit)
+void ASWeapon::PlayImpactEffect(FHitScanTrace Hit)
 {
-	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.HitPhysMaterial);
 	UParticleSystem* SelectedEffect = nullptr;
 	switch (SurfaceType)
 	{
@@ -181,7 +199,7 @@ void ASWeapon::PlayImpactEffect(FHitResult Hit)
 
 	if (SelectedEffect)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.ImpactPoint, Hit.ImpactNormal.Rotation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Hit.TraceTo, Hit.HitPointRotation);
 	}
 }
 
@@ -192,3 +210,10 @@ void ASWeapon::Tick(float DeltaTime)
 
 }
 
+void ASWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// 避免发起的客户端复制
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace, COND_SkipOwner);
+}
