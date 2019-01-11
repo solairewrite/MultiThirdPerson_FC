@@ -101,6 +101,7 @@ void ASWeapon::Fire()
 				HitScanTrace.HitPhysMaterial = Hit.PhysMaterial.Get();
 				HitScanTrace.HitPointRotation = Hit.ImpactNormal.Rotation();
 			}
+			PlayImpactEffect(HitScanTrace);
 
 			// 记录上一次开火的时间,时间冷却内无法射击
 			LastFireTime = GetWorld()->TimeSeconds;

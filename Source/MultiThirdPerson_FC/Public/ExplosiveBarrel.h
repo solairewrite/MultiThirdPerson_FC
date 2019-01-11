@@ -9,6 +9,7 @@
 class USHealthComponent;
 class UStaticMeshComponent;
 class URadialForceComponent;
+class USoundCue;
 
 UCLASS()
 class MULTITHIRDPERSON_FC_API AExplosiveBarrel : public AActor
@@ -39,6 +40,9 @@ protected:
 		bool bExploded;
 	UFUNCTION()
 		void OnRep_Exploded();
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+		USoundCue* ExplodeSound;
 
 	// 爆炸时,向上的推力
 	UPROPERTY(EditDefaultsOnly, Category = "FX")

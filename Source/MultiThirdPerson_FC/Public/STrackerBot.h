@@ -9,6 +9,7 @@
 class UStaticMeshComponent;
 class USHealthComponent;
 class USphereComponent;
+class USoundCue;
 
 
 UCLASS()
@@ -67,6 +68,18 @@ protected:
 	bool bStartedSelfDestruction;
 	FTimerHandle TimerHandle_SelfDamage;
 	void DamageSelf();
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+		float SelfDamageInterval;
+
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+		USoundCue* SelfDestructSound;
+	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
+		USoundCue* ExplodeSound;
+
+	void OnCheckNearByBots();
+	// 爆炸等级,影响伤害和颜色
+	int32 PowerLevel;
 
 public:
 	// Called every frame

@@ -6,6 +6,7 @@
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 AExplosiveBarrel::AExplosiveBarrel()
@@ -66,6 +67,11 @@ void AExplosiveBarrel::OnRep_Exploded()
 {
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
 	MeshComp->SetMaterial(0, ExplodedMaterial);
+
+	if (ExplodeSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ExplodeSound, GetActorLocation());
+	}
 
 	// 伤害
 	float MinDamage = 10.0f;
