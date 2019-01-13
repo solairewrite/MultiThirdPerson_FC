@@ -10,6 +10,7 @@
 #include "MultiThirdPerson_FC.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundBase.h"
 
 // 自定义控制台命令
 static int32 DebugWeaponDrawing = 0;
@@ -42,6 +43,8 @@ ASWeapon::ASWeapon()
 	// 客户端同步更新频率
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+
+	FireSoundVolume = 0.8f;
 }
 
 // Called when the game starts or when spawned
@@ -63,6 +66,9 @@ void ASWeapon::Fire()
 	AActor* MyOwner = GetOwner();
 	if (MyOwner)
 	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation(), FireSoundVolume);
+
+
 		FVector EyeLocation;
 		FRotator EyeRotation;
 		// virtual void GetActorEyesViewPoint( FVector& OutLocation, FRotator& OutRotation ) const;

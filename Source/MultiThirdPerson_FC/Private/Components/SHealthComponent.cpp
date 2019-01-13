@@ -50,6 +50,17 @@ void USHealthComponent::HandleTakeAnyDanage(AActor* DamagedActor, float Damage, 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 }
 
+void USHealthComponent::Heal(float HealAmount)
+{
+	if (HealAmount <= 0 || Health <= 0)
+	{
+		return;
+	}
+	Health = FMath::Clamp(Health + HealAmount, 0.0f, DefaultHealth);
+	UE_LOG(LogTemp, Warning, TEXT("加血: %s / %s"), *FString::SanitizeFloat(HealAmount), *FString::SanitizeFloat(Health));
+	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
+}
+
 // Called every frame
 void USHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {

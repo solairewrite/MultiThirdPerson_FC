@@ -9,6 +9,7 @@
 class USkeletalMeshComponent;
 class UParticleSystem;
 class UPhysicalMaterial;
+class USoundBase;
 
 USTRUCT()
 struct FHitScanTrace
@@ -90,6 +91,12 @@ protected:
 		FHitScanTrace HitScanTrace;
 	UFUNCTION()
 		void OnRep_HitScanTrace();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+		USoundBase* FireSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SOund")
+		float FireSoundVolume;
 
 public:
 	// Called every frame
