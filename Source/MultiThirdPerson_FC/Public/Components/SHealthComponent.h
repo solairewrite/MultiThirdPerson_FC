@@ -38,6 +38,8 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
 		void Heal(float HealAmount);
 
+	bool bIsDead;
+
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -45,4 +47,5 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 		FOnHealthChangeSignature OnHealthChanged;
 
+	float GetHealth() const;
 };

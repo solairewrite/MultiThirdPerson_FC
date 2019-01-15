@@ -88,7 +88,7 @@ void ASTrackerBot::OnHealthChanged(USHealthComponent* HealthComponent, float Hea
 		// 根据变量名称设置蓝图变量
 		MatInst->SetScalarParameterValue("LastTimeDamageTaken", GetWorld()->TimeSeconds);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Health is %s of %s"), *FString::SanitizeFloat(Health), *GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("Health is %s of %s"), *FString::SanitizeFloat(Health), *GetName());
 
 	if (Health <= 0.0f)
 	{
