@@ -92,6 +92,9 @@ protected:
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 		bool bDied;
 
+	UFUNCTION(BlueprintImplementableEvent)
+		void OnDied();
+
 	// 控制换枪动画
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Player")
 		bool bPressedEquip;

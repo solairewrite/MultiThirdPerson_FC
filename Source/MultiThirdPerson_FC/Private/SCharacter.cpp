@@ -188,6 +188,7 @@ void ASCharacter::OnHealthChanged(USHealthComponent* HealthComponent, float Heal
 	{
 		// 控制播放死亡动画,在蓝图中通过bDied设置
 		bDied = true;
+		OnDied();
 		// 停止开火
 		StopFire();
 		// 立刻停止移动

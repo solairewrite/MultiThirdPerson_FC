@@ -96,7 +96,7 @@ void ASWeapon::Fire()
 
 			// 伤害处理
 			AActor* HitActor = Hit.GetActor();
-			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, EyeLocation, Hit, MyOwner->GetInstigatorController(), this, DamageType);
+			UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, EyeLocation, Hit, MyOwner->GetInstigatorController(), MyOwner, DamageType);
 
 			// 中枪位置效果
 			PlayFireEffects(Hit.ImpactPoint);
