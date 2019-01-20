@@ -124,6 +124,7 @@ void ASCharacter::EndSpeedUp()
 
 void ASCharacter::EquipWeapon(TSubclassOf<ASWeapon> WeaponClass)
 {
+	UE_LOG(LogTemp, Warning, TEXT("装备武器  %s %s"), *(GetName()), *(WeaponClass->GetFName().ToString()));
 	// TODO 播放Equip动画,在学习死亡动画的时候添加
 	if (!WeaponClass || CurrentWeapon->StaticClass == WeaponClass->StaticClass)
 	{

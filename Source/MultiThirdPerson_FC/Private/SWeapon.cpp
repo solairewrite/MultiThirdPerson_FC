@@ -45,6 +45,8 @@ ASWeapon::ASWeapon()
 	MinNetUpdateFrequency = 33.0f;
 
 	FireSoundVolume = 0.8f;
+
+	BulletSpread = 2.0f;
 }
 
 // Called when the game starts or when spawned
@@ -74,7 +76,13 @@ void ASWeapon::Fire()
 		// virtual void GetActorEyesViewPoint( FVector& OutLocation, FRotator& OutRotation ) const;
 		// 使用引用参数,用于改变实参的值
 		MyOwner->GetActorEyesViewPoint(EyeLocation, EyeRotation);
-		FVector TraceEnd = EyeLocation + (EyeRotation.Vector() * 10000);
+		FVector ShotDirection = EyeRotation.Vector();
+		// 射在锥体范围内
+		float HalfRad = FMath::DegreesToRadians(BulletSpread);
+		// 在锥体内生成随机方向
+		ShotDirection = FMath::VRandCone(ShotDirection, HalfRad, HalfRad);
+
+		FVector TraceEnd = EyeLocation + (ShotDirection * 10000);
 
 		FCollisionQueryParams QueryParams;
 		QueryParams.AddIgnoredActor(MyOwner);

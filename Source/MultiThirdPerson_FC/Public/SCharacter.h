@@ -78,9 +78,6 @@ protected:
 	void EquipFirstWeapon();
 	void EquipSecondWeapon();
 
-	void StartFire();
-	void StopFire();
-
 	// VisibleAnywhere:可以在属性窗口查看
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
 		USHealthComponent* HealthComp;
@@ -111,6 +108,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-
+	UFUNCTION(BlueprintCallable, Category = "Player")
+		void StartFire();
+	UFUNCTION(BlueprintCallable, Category = "Player")
+		void StopFire();
 
 };

@@ -98,6 +98,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "SOund")
 		float FireSoundVolume;
 
+	// 子弹在随机椎体内,锥体角度
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta = (ClampMin = 0.0f))
+		float BulletSpread;
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
