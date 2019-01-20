@@ -81,6 +81,10 @@ protected:
 	// 爆炸等级,影响伤害和颜色
 	int32 PowerLevel;
 
+	FTimerHandle TimerHandle_RefreshPath;
+
+	void RefreshPath();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

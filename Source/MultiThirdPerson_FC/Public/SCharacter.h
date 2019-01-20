@@ -101,6 +101,12 @@ protected:
 
 	void StopEquipAnim();
 
+	// 死亡后多久消失
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+		float DestroyTime;
+
+	void DestroyWeapon();
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

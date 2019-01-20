@@ -40,6 +40,10 @@ protected:
 
 	bool bIsDead;
 
+	// 友军分组
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HealthComponent")
+		uint8 TeamNum;
+
 public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -48,4 +52,7 @@ public:
 		FOnHealthChangeSignature OnHealthChanged;
 
 	float GetHealth() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
+		static bool IsFriendly(AActor* ActorA, AActor* ActorB);
 };

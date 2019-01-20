@@ -53,6 +53,8 @@ ASCharacter::ASCharacter()
 	bDied = false;
 	bPressedEquip = false;
 	EquipAnimLength = 1.5f;
+
+	DestroyTime = 5.0f;
 }
 
 // Called when the game starts or when spawned
@@ -136,10 +138,7 @@ void ASCharacter::EquipWeapon(TSubclassOf<ASWeapon> WeaponClass)
 		return;
 	}
 
-	if (CurrentWeapon)
-	{
-		CurrentWeapon->Destroy();
-	}
+	DestroyWeapon();
 
 	bPressedEquip = true;
 	FTimerHandle TimerHandle_StopEquipAnim;
@@ -189,6 +188,9 @@ void ASCharacter::OnHealthChanged(USHealthComponent* HealthComponent, float Heal
 	{
 		// 控制播放死亡动画,在蓝图中通过bDied设置
 		bDied = true;
+		// 销毁武器
+		FTimerHandle TimerHandle_DestroyWeapon;
+		GetWorldTimerManager().SetTimer(TimerHandle_DestroyWeapon, this, &ASCharacter::DestroyWeapon, DestroyTime, false);
 		OnDied();
 		// 停止开火
 		StopFire();
@@ -199,13 +201,21 @@ void ASCharacter::OnHealthChanged(USHealthComponent* HealthComponent, float Heal
 		// 使Pawn与控制器分离,等待销毁
 		DetachFromControllerPendingDestroy();
 		// 定时销毁
-		SetLifeSpan(7.0f);
+		SetLifeSpan(DestroyTime);
 	}
 }
 
 void ASCharacter::StopEquipAnim()
 {
 	bPressedEquip = false;
+}
+
+void ASCharacter::DestroyWeapon()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->Destroy();
+	}
 }
 
 // Called every frame
