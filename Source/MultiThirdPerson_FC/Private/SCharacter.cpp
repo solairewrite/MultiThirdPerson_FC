@@ -190,7 +190,7 @@ void ASCharacter::OnHealthChanged(USHealthComponent* HealthComponent, float Heal
 		bDied = true;
 		// 销毁武器
 		FTimerHandle TimerHandle_DestroyWeapon;
-		GetWorldTimerManager().SetTimer(TimerHandle_DestroyWeapon, this, &ASCharacter::DestroyWeapon, DestroyTime, false);
+		GetWorldTimerManager().SetTimer(TimerHandle_DestroyWeapon, this, &ASCharacter::DestroyWeapon, DestroyTime - 1.0f, false);
 		OnDied();
 		// 停止开火
 		StopFire();
